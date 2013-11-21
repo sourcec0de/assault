@@ -1,6 +1,6 @@
 {
   "name": "assault",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A load testing tool written in nodeJS",
   "main": "index.js",
   "scripts": {

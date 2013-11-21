@@ -17,6 +17,7 @@ var showHelp = function(){
     console.log(
         "assault\n"+
         "=======\n"+
+        "-u or -f required\n"+
         "-H --help        = Show Help Text (Overrides Running Anything)\n"+
         "-c --concurrency = Number of Concurrent Requests to send (Defaults to 3)\n"+
         "-t --timeout     = Timeout for each request in milliseconds (Defaults to 3000ms)\n"+
