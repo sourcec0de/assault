@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var argv = require('optimist').argv;
+var req = require('request');
+var Queue = require('queue');
+var queue = new Queue({
+    concurrency: argv.c || argv.concurrency || 3,
+    timeout: argv.t || argv.timeout || 3000
+});
+
+var printjson = function(j) {
+    console.log(JSON.stringify(j, null, 4));
+}
+
+var showHelp = function(){
+    console.log(
+        "assault\n"+
+        "=======\n"+
+        "-H --help        = Show Help Text (Overrides Running Anything)\n"+
+        "-c --concurrency = Number of Concurrent Requests to send (Defaults to 3)\n"+
+        "-t --timeout     = Timeout for each request in milliseconds (Defaults to 3000ms)\n"+
+        "-m --max         = Maxiumum Requests to send (Defaults to 100)\n"+
+        "-u --url         = URL to send request to\n"+
+        "-f --file        = a JSON encoded file that contains request params (Overrides -u --url)\n"
+    )
+    process.exit();
+}
+
+// HELP TEXT
+if(argv.H || argv.help) showHelp();
+
+
+
+var url = argv.u || argv.url;
+var maxReq = argv.m || argv.max || 100;
+var file = argv.f || argv.file;
+
+if (!url && !file || !file && !url) showHelp();
+
+var reqData = (file)? JSON.parse(fs.readFileSync(file,'utf8')) : {"url":url};
+
+
+// Construct URL List
+var errors = [];
+var responses = {}
+var r400 = [];
+var r500 = [];
+var r200 = [];
+var i = maxReq;
+for (i - 1; i >= 0; i--) {
+    queue.push(function(fn) {
+        var data = { start:Date.now() };
+        req(reqData, function(err, res, body) {
+            var status = (res && res.statusCode) ? res.statusCode : null;
+            if (err) {
+                errors.push(err);
+                data.end = Date.now();
+            } else if (status) {
+                var statusKey = status.toString();
+                if (!(responses[statusKey] instanceof Array)) responses[statusKey] = [];
+                data.end = Date.now();
+                responses[statusKey].push(data);
+            }
+            // Complete
+            data.ms = (data.end - data.start);
+            fn();
+        });
+    });
+};
+
+
+queue.on('drain', function() {
+    // printjson(responses)
+    Object.keys(responses).forEach(function(s) {
+        var msSum = 0;
+        var total = responses[s].length;
+        // console.log(s, total);
+        responses[s].forEach(function(r){
+            msSum += r.ms;
+            // console.log(r.start,r.end,r.ms)
+        });
+        console.log(
+                    "CODE:",s,
+                    "NUM:",total,
+                    "MS:",msSum/total);
+
+    });
+});
