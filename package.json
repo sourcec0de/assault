@@ -1,6 +1,6 @@
 {
   "name": "assault",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A load testing tool written in nodeJS",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "assault": "./bin/assault"
   },
   "author": "James R. Qualls",
+  "repository": "git://github.com/sourcec0de/assault",
   "license": "MIT",
   "dependencies": {
     "request": "~2.27.0",
